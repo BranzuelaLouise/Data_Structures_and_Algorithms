@@ -28,7 +28,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class BallGui extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final Timer timer;
-	private final JButton addButton, stopButton, add100, removeBall;
+	private final JButton addButton, stopButton, add100, removeBall, remove100;
 	private final DrawPanel drawPanel;
 	private final List<Ball> balls;
 
@@ -46,16 +46,19 @@ public class BallGui extends JPanel implements ActionListener {
 		stopButton = new JButton("Stop ");
 		add100 = new JButton("Add 100");
 		removeBall = new JButton("Remove ball");
+		remove100 = new JButton("Remove 100");
 		addButton.addActionListener(this);
 		stopButton.addActionListener(this);
 		add100.addActionListener(this);
 		removeBall.addActionListener(this);
+		remove100.addActionListener(this);
 
 		JPanel panel = new JPanel();
 		panel.add(addButton);
 		panel.add(stopButton);
 		panel.add(add100);
 		panel.add(removeBall);
+		panel.add(remove100);
 
 		super.add(panel, BorderLayout.SOUTH);
 		super.add(drawPanel, BorderLayout.CENTER);
@@ -93,8 +96,14 @@ public class BallGui extends JPanel implements ActionListener {
 		}
 		if (source == removeBall) {
 			if (balls.size() > 0) { // Check if there's a ball in list
-				balls.get(0).requestStop();
 				balls.remove(0);
+			}
+		}
+		if (source == remove100) {
+			for (int i = 0; i < 100; i++) {
+				if (balls.size() > 0) { // Check if there's a ball in list
+					balls.remove(0);
+				}
 			}
 		}
 	}

@@ -4,18 +4,16 @@ import java.util.Random;
 
 public class Ball implements Runnable {
 
-	public static int WORLD_W, WORLD_H; // Box width and height
+	public static int WORLD_W, WORLD_H; // The ball container's width and height
 	private int x, y; // Ball coordinates
-	private int minX, maxX, minY, maxY; // Bounds of the ball's box
+	private int minX, maxX, minY, maxY; // Bounds of the ball's container
 	private int size; // Ball size
-	private int dx, dy; // Ball speed
+	private int dx, dy; // Ball direction
 	private Color colour; // Ball colour
 	private boolean stopRequested; // Flag for stop requested
 	private Random gen;
 
 	public Ball() {
-		x = WORLD_W / 2;
-		y = WORLD_H / 2;
 		// Container's bounds
 		minX = 0;
 		minY = 0;
@@ -24,11 +22,11 @@ public class Ball implements Runnable {
 
 		gen = new Random();
 		colour = new Color(gen.nextFloat(), gen.nextFloat(), gen.nextFloat());
-		size = 20;
-		Random xDirection = new Random();
-		Random yDirection = new Random();
-		dx = xDirection.nextInt(10 + 10) - 10; // Random direction for the x axis
-		dy = yDirection.nextInt(5 + 5) - 5; // Random direction for the y axis
+		x = gen.nextInt(maxX - minX + 1); // Randomises the spawn of the ball in the x axis
+		y = gen.nextInt(maxY - minY + 1); // Randomises the spawn of the ball in the y axis
+		size = gen.nextInt(50 - 15) + 15; // Random size with minimum 10 so that it doesn't spawn pixel sized balls
+		dx = gen.nextInt(25 + 25) - 25; // Random direction for the x axis
+		dy = gen.nextInt(25 + 25) - 25; // Random direction for the y axis
 		if (dx == 0 && dy == 0) { // If the value of x and y are 0, hard code the direction
 			dx = 2;
 			dy = 1;
@@ -37,19 +35,19 @@ public class Ball implements Runnable {
 	}
 
 	private void move() {
-		// Ball's allowed bounding coordinates before collision
+		// Ball's minimum coordinates before collision with the container
 		float radius = size / 2;
-		float ballMinX = minX + radius; // Ball's minimum x coordinate before collision
-		float ballMinY = minY + radius; // Ball's minimum y coordinate before collision
-		float ballMaxX = maxX - radius; // Ball's maximum x coordinate before collision
-		float ballMaxY = maxY - radius; // Ball's maximum y coordinate before collision
+		float ballMinX = minX + radius;
+		float ballMinY = minY + radius;
+		float ballMaxX = maxX - radius;
+		float ballMaxY = maxY - radius;
 
 		x += dx;
 		y += dy;
 
 		// Check if it crosses the x-axis bounds
 		if (x < ballMinX) { // The minimum X coordinate collision detection
-			dx = -dx; // Bounce in the opposite x direction
+			dx = -dx; // Bounce along the normal
 			x = (int) ballMinX; // Re-position the ball at the x-axis
 		} else if (x > ballMaxX) { // The maximum X coordinate collision detection
 			dx = -dx;
@@ -58,7 +56,7 @@ public class Ball implements Runnable {
 
 		// Check if it crosses the y-axis bounds
 		if (y < ballMinY) { // The minimum Y coordinate collision detection
-			dy = -dy; // Bounce in the opposite y direction
+			dy = -dy; // Bounce along the normal
 			y = (int) ballMinY; // Re-position the ball at the y-axis
 		} else if (y > ballMaxY) { // The maximum Y coordinate collision detection
 			dy = -dy;
@@ -73,8 +71,7 @@ public class Ball implements Runnable {
 		while (!stopRequested) {
 			move();
 			try {
-				Random speed = new Random();
-				Thread.sleep(speed.nextInt(100)); // Randomises the speed of the ball
+				Thread.sleep(22);
 			} catch (InterruptedException e) {
 			}
 		}
@@ -87,7 +84,7 @@ public class Ball implements Runnable {
 
 	public void drawBall(Graphics g) {
 		g.setColor(colour);
-		g.fillOval(x - (size / 2), y - (size / 2), size, size); // Using the center of the circle as a coordinate
+		g.fillOval(x - (size / 2), y - (size / 2), size, size); // Setting center of the circle as its collision hitbox
 	}
 
 }
