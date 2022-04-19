@@ -71,7 +71,7 @@ public class Ball implements Runnable {
 		while (!stopRequested) {
 			move();
 			try {
-				Thread.sleep(22);
+				Thread.sleep(gen.nextInt(50 - 20) + 20); // Frame rate or speed of the ball
 			} catch (InterruptedException e) {
 			}
 		}
