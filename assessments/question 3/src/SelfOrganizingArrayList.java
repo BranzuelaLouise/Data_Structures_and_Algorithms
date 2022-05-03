@@ -14,29 +14,24 @@ public class SelfOrganizingArrayList<E> implements List<E> {
 		this.size = 0;
 	}
 
-	@Override
-	public int size() {
-		return this.list.length;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return this.list.length == 0;
-	}
-
-	@Override
-	public boolean contains(Object o) {
-		boolean containsSearch = false;
+	public int getIndexOfObject(Object o) {
 		int index = -1;
+
+		// Search for the Index of the Element
 		for (int i = 0; i < size; i++) {
-			if (this.list[i] == o) {
-				containsSearch = true;
+			// Found a match, save the index position
+			if (this.list[i].equals(o)) {
 				index = i;
 				break;
 			}
 		}
 
-		if (containsSearch) {
+		return index;
+	}
+
+	public void incrementAccessCount(int index, Object accessedObject) {
+		// Match found, increment count for the related index
+		if (index != -1) {
 			this.accessCount[index]++;
 			// Save original count of the found index
 			int c = this.accessCount[index];
@@ -49,12 +44,33 @@ public class SelfOrganizingArrayList<E> implements List<E> {
 						this.list[j] = list[j - 1];
 						this.accessCount[j] = accessCount[j - 1];
 					}
-					this.list[i] = o;
+					this.list[i] = accessedObject;
 					this.accessCount[i] = c;
 					break;
 				}
 			}
 		}
+	}
+
+	@Override
+	public int size() {
+		return this.list.length;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return this.list.length == 0;
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		int index = this.getIndexOfObject(o);
+		boolean containsSearch = index != -1;
+
+		if (containsSearch) {
+			this.incrementAccessCount(index, o);
+		}
+
 		return containsSearch;
 	}
 
@@ -75,61 +91,6 @@ public class SelfOrganizingArrayList<E> implements List<E> {
 			}
 		};
 		return iterate;
-	}
-
-	@Override
-	public ListIterator<E> listIterator() {
-		ListIterator<E> listIterate = new ListIterator<E>() {
-			private int currentIndex = 0;
-
-			@Override
-			public boolean hasNext() {
-				return currentIndex < list.length && list[currentIndex] != null;
-			}
-
-			@Override
-			@SuppressWarnings("unchecked")
-			public E next() {
-				return (E) list[this.currentIndex++];
-			}
-
-			@Override
-			public boolean hasPrevious() {
-				return currentIndex-- >= 0;
-			}
-
-			@Override
-			@SuppressWarnings("unchecked")
-			public E previous() {
-				return (E) list[this.currentIndex--];
-			}
-
-			@Override
-			public int nextIndex() {
-				return currentIndex++;
-			}
-
-			@Override
-			public int previousIndex() {
-				return currentIndex--;
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException("Invalid operation");
-			}
-
-			@Override
-			public void set(E e) {
-				throw new UnsupportedOperationException("Invalid operation");
-			}
-
-			@Override
-			public void add(E e) {
-				throw new UnsupportedOperationException("Invalid operation");
-			}
-		};
-		return listIterate;
 	}
 
 	@Override
@@ -189,9 +150,14 @@ public class SelfOrganizingArrayList<E> implements List<E> {
 	}
 
 	@Override
+	public ListIterator<E> listIterator() {
+		return this.listIterator(0);
+	}
+
+	@Override
 	public boolean add(E e) {
 		if (this.size == this.list.length) {
-			// Update Size
+			// Expand the capacity of the list
 			this.size++;
 
 			// Update Appended List and Appended Access Count
@@ -211,39 +177,6 @@ public class SelfOrganizingArrayList<E> implements List<E> {
 			this.size++;
 		}
 		return true;
-	}
-
-	@Override
-	public boolean remove(Object o) {
-		boolean removeSearch = false;
-		int index = -1;
-		for (int i = 0; i < size; i++) {
-			if (this.list[i] == o) {
-				removeSearch = true;
-				index = i;
-				break;
-			}
-		}
-
-		if (removeSearch) {
-			// Update Reduced List and Reduced Access Count
-			Object[] reducedList = new Object[this.size];
-			int[] reducedAccessCount = new int[this.size];
-
-			for (int i = index; i < size - 1; i++) {
-				// Shuffle all to the left if applicable
-				for (int counter = index; counter < this.size - 1; counter++) {
-					reducedList[counter] = this.list[counter + 1];
-					reducedAccessCount[counter] = this.accessCount[counter + 1];
-				}
-
-				// Update all fields
-				this.list = reducedList;
-				this.accessCount = reducedAccessCount;
-				this.size--;
-			}
-		}
-		return removeSearch;
 	}
 
 	@Override
@@ -275,37 +208,22 @@ public class SelfOrganizingArrayList<E> implements List<E> {
 	}
 
 	@Override
-	public int indexOf(Object o) {
-		int index = -1;
-
-		// Search for the Index of the Element
-		for (int i = 0; i < size; i++) {
-			// Found a match, save the index position
-			if (this.list[i] == o) {
-				index = i;
-				break;
-			}
+	public boolean remove(Object o) {
+		int index = this.getIndexOfObject(o);
+		boolean removeSearch = index != -1;
+		if (removeSearch) {
+			this.remove(index);
 		}
+		return removeSearch;
+	}
+
+	@Override
+	public int indexOf(Object o) {
+		int index = this.getIndexOfObject(o);
 
 		// Match found, increment count for the related index
 		if (index != -1) {
-			this.accessCount[index]++;
-			// Save original count of the found index
-			int c = this.accessCount[index];
-
-			// Check if count array has any significant changes
-			for (int i = 0; i < index; i++) {
-				// Recently incremented count is greater
-				if (accessCount[index] > accessCount[i]) {
-					for (int j = index; j > i; j--) {
-						this.list[j] = list[j - 1];
-						this.accessCount[j] = accessCount[j - 1];
-					}
-					this.list[i] = o;
-					this.accessCount[i] = c;
-					break;
-				}
-			}
+			this.incrementAccessCount(index, o);
 		}
 
 		return index;
